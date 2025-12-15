@@ -2,13 +2,13 @@ import asyncHandler from "express-async-handler"
 import User from "./user.model";
 import { generateAccessToken, generateRefreshToken } from "./generateToken";
 const Register = asyncHandler(async(req,res)=>{
-    const {name,email,password,phoneNo,role} = req.body;
+    let {name,email,password,phoneNo,role} = req.body;
 
     if(!name || !email || !password){
         throw new Error("All fields are required");
     }
 
-    email = email.toLowerCase();
+    email = email?.toLowerCase();
 
     const userExist = await User.findOne({
         $or:[{email},{phoneNo}]
@@ -58,6 +58,48 @@ const Register = asyncHandler(async(req,res)=>{
         })
 })
 
+const login = asyncHandler(async(req,res)=>{
+    let {email , phoneNo , password} = req.body;
+    if((!email && !phoneNo) || !password){
+        res.status(400);
+        throw new Error("All fields are required");
+    }
+
+    if (email) email = email.toLowerCase();
 
 
-export {Register}
+    const user = await User.findOne({
+        $or:[{email},{phoneNo}]
+    })
+
+    if(!user){
+        res.status(401);
+        throw new Error("Failed to login in user");
+    }
+
+    if(await user.matchPassword(password)){
+        res.status(200)
+        .cookie("accessToken", generateAccessToken(user._id), {
+            httpOnly:true,
+            secure:process.env.NODE_ENV === "production",
+            sameSite:"strict",
+            maxAge:15*60*1000
+        })
+        .cookie("refreshToken", generateRefreshToken(user._id), {
+            httpOnly:true,
+            secure:process.env.NODE_ENV === "production",
+            sameSite:"strict",
+            maxAge:7*24*60*60*1000
+        })
+        .json({
+            _id:user._id,
+            name:user.name,
+            email:user.email,
+            role:user.role,
+        })
+    } else {
+        res.status(401);
+        throw new Error("Invalid credentials")
+    }
+})
+export {Register, login}
