@@ -15,8 +15,14 @@ app.use("/auth", createProxyMiddleware({
     changeOrigin:true,  
     timeout: 5000,
     proxyTimeout: 5000,
-    
 }));
+
+app.use("/product", createProxyMiddleware({
+    target:"http://localhost:5002",
+    changeOrigin:true,
+    timeout:5000,
+    proxyTimeout:5000
+}))
 
 app.get("/",(req,res)=>{
     res.json("Working")
