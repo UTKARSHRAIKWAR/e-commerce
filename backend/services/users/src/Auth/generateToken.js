@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 
-const generateAccessToken = (_id) =>{
-    return jwt.sign({_id},
+const generateAccessToken = (user) =>{
+    return jwt.sign({id:user._id , role:user.role },
         process.env.JWT_AccessSecret,
         {expiresIn:"15m"}
     );

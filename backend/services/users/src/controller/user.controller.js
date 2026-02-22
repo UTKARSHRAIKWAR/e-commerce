@@ -1,6 +1,7 @@
 import asyncHandler from "express-async-handler"
 import User from "../DB/user.model.js";
 import { generateAccessToken, generateRefreshToken } from "../Auth/generateToken.js";
+import jwt from "jsonwebtoken";
 const Register = asyncHandler(async(req,res)=>{
 
    let {name, phoneNo, email,password,role} = req.body;
@@ -51,7 +52,7 @@ const Register = asyncHandler(async(req,res)=>{
             sameSite:"strict",
             maxAge:7*24*60*60*1000
         })
-        .json({
+        .json({ 
             message:"Register Successful",
             user : {
             _id:user._id,
@@ -84,7 +85,7 @@ const login = asyncHandler(async(req,res)=>{
         throw new Error("Invalid credentials");
     }
 
-    const accessToken = generateAccessToken(user._id);
+    const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user._id);
 
     user.refreshToken = refreshToken;
@@ -122,7 +123,7 @@ const logout = asyncHandler(async (req,res) => {
     const refreshToken = req.cookies.refreshToken;
 
     if(!refreshToken){
-        return res.sendStatus(204); // already logout
+        return res.sendStatus(204); //token not found -> already logout
     }
 
     const user = await User.findOne({refreshToken});
@@ -145,4 +146,46 @@ const logout = asyncHandler(async (req,res) => {
     .status(200)
     .json({message:"Logged out successfully"})
 })
-export {Register, login, logout}
+
+const refreshToken = asyncHandler(async(req,res) => {
+    const token = req.cookies?.refreshToken;
+    if(!token) {
+        return res.status(401).json({message:"Token not found."})
+    }
+
+    let decoded;
+    try {
+        decoded = jwt.verify(token, process.env.JWT_RefreshSecret);
+    } catch (err) {
+        return res.status(403).json({ message: "Invalid or expired refresh token." });
+    }
+    
+    const user = await User.findById(decoded._id).select("-password");
+
+    if(!user || user.refreshToken !== token){
+        return res.status(403).json({message:"Invalid or expired refresh token."})
+    }
+
+    const newAccessToken = generateAccessToken(user);
+    const newRefreshToken = generateRefreshToken(user._id);
+
+    user.refreshToken = newRefreshToken;
+    await user.save();
+
+    res.status(200)
+    .cookie("accessToken",newAccessToken, {
+            httpOnly:true,
+            secure:process.env.NODE_ENV === "production",
+            sameSite:"strict",
+            maxAge:15*60*1000
+        })
+    .cookie("refreshToken",newRefreshToken, {
+            httpOnly:true,
+            secure:process.env.NODE_ENV === "production",
+            sameSite:"strict",
+            maxAge:7*24*60*60*1000
+        })
+    .json({message:"Token refreshed successfully."})
+})
+
+export {Register, login, logout ,refreshToken}

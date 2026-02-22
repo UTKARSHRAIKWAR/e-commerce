@@ -1,7 +1,14 @@
 import express from "express"
 import { createProxyMiddleware } from "http-proxy-middleware"
+import { authenticate } from "./middlewares/auth.middleware.js";
+import cookieParser from "cookie-parser";
+import dotenv from "dotenv"
+
+dotenv.config();
 
 const app = express()
+
+app.use(cookieParser());
 
 // app.use(express.json());
 // app.use(express.urlencoded({ extended: true })); // when we use body parsing in gateway, request never reach to other services
@@ -17,7 +24,7 @@ app.use("/auth", createProxyMiddleware({
     proxyTimeout: 5000,
 }));
 
-app.use("/product", createProxyMiddleware({
+app.use("/product",authenticate, createProxyMiddleware({
     target:"http://localhost:5002",
     changeOrigin:true,
     timeout:5000,

@@ -15,21 +15,36 @@ const productSchema = Schema({
     },
     discount:{
         type:Number,
-        required:true,
+        required:false,
     },
-    categoryId:{},
+    categoryId:{
+        type:mongoose.Schema.Types.ObjectId, 
+        ref:"Category"
+    },
     stockQuantity:{
         type:Number,
-        required:true,
+        required:false,
     },
     images:{
-        type:Array,
+        type:[String],
         required:true,
     },
-    averageRatings:{},
-    ratingCount:{},
-    isActive:{},
-    sellerId:{}
+    averageRatings:{
+        type:Number,
+        default:0,
+    },
+    ratingCount:{
+        type:Number,
+        default:0,
+    },
+    isActive:{
+        type:Boolean,
+        default:true,
+    },
+    sellerId:{
+        type:String,
+        required:true,
+    }
 },{ timestamps: true })
 
 const Products = mongoose.model("Products",productSchema);
