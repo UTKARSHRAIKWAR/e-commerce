@@ -31,6 +31,13 @@ app.use("/product",authenticate, createProxyMiddleware({
     proxyTimeout:5000
 }))
 
+app.use("/orders",authenticate, createProxyMiddleware({
+    target:"http://localhost:5003",
+    changeOrigin:true,
+    timeout:5000,
+    proxyTimeout:5000
+}))
+
 app.get("/",(req,res)=>{
     res.json("Working")
 })
