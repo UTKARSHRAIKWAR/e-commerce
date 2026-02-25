@@ -47,6 +47,14 @@ app.use("/order",authenticate, createProxyMiddleware({
     
 }))
 
+app.use("/payment",authenticate, createProxyMiddleware({
+    target:"http://localhost:5005",
+    changeOrigin:true,
+    timeout:5000,
+    proxyTimeout:5000
+    
+}))
+
 app.get("/health",(req,res)=>{
     res.json("Working")
 })

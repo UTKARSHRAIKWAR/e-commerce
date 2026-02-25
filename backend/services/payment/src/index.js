@@ -1,6 +1,6 @@
 import dotenv from "dotenv"
 import express from "express"
-import connectDB from "./db/init";
+import connectDB from "./db/init.js";
 
 
 dotenv.config();
@@ -11,7 +11,7 @@ app.get("/health", (req,res)=>{
     res.json("Payment service running");
 })
 
-const PORT = process.env.PORT || 3003;
+const PORT = process.env.PORT || 3005;
 
 app.listen(PORT, ()=>{
     console.log(`Payment services running on Port: ${PORT}`);
