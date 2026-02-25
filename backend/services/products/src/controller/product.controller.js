@@ -13,7 +13,7 @@ export const addProduct = asyncHandler(async(req,res,next)=> {
     
         const sellerId = req.headers["x-user-id"];
     
-        if(!name || !description || !price){
+        if(!name || !description || !price || !stockQuantity){
             res.status(400).json({message:"All fields are required."});
         }
     
@@ -169,5 +169,40 @@ export const getSellerProducts = asyncHandler(async(req,res)=> {
     res.json(products)
 })
 
+
+export const validateStock = asyncHandler(async(req,res)=>{
+    const {productId , quantity} = req.body;
+
+    if(!productId || !quantity){
+        return res.status(400).json({
+            message:"Product ID and quantity is required."
+        })
+    };
+
+    const product = await Products.findById({_id:productId});
+
+    console.log(product);
+    
+
+    if(!product || !product.isActive){
+        return res.status(400).json({
+            message:"Product not found."
+        })
+    }
+
+    if(product.stockQuantity < quantity){
+        res.status(400).json({
+            message:"Insufficient stock",
+            available:false,
+            availableStock:product.stockQuantity
+        });
+    }
+
+    res.status(200).json({
+        message:"Stock available",
+        available:true,
+        availableStock:product.stockQuantity
+    });
+})
 
 //TODO => add review controller.

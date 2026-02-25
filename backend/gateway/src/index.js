@@ -31,16 +31,26 @@ app.use("/product",authenticate, createProxyMiddleware({
     proxyTimeout:5000
 }))
 
-app.use("/orders",authenticate, createProxyMiddleware({
+app.use("/cart",authenticate, createProxyMiddleware({
     target:"http://localhost:5003",
     changeOrigin:true,
     timeout:5000,
     proxyTimeout:5000
+    
 }))
 
-app.get("/",(req,res)=>{
+app.use("/order",authenticate, createProxyMiddleware({
+    target:"http://localhost:5004",
+    changeOrigin:true,
+    timeout:5000,
+    proxyTimeout:5000
+    
+}))
+
+app.get("/health",(req,res)=>{
     res.json("Working")
 })
+
 
 app.listen(5000, ()=> 
     console.log("API Gateway running on PORT 5000")
