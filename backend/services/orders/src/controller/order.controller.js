@@ -107,13 +107,10 @@ export const confirmPayment = asyncHandler(async(req,res)=>{
 
         
         try {
-
             //getUser
             const {data:user} = await axios.get(
                 `${process.env.USER_SERVICE_URL}/users/${order.userId}`,
             )
-
-            console.log("User:", user);
 
             //send mail
             await axios.post(
@@ -124,20 +121,21 @@ export const confirmPayment = asyncHandler(async(req,res)=>{
                 }
             )
         } catch (error) {
-             if (error.response) {
-        // Server responded with error status
-        console.error("Email service error:");
-        console.error("Status:", error.response.status);
-        console.error("Data:", error.response.data);
-    } 
-    else if (error.request) {
-        // Request made but no response
-        console.error("No response from notification service");
-    } 
-    else {
-        // Something else happened
-        console.error("Error:", error.message);
-    }
+
+            if (error.response) {
+                // Server responded with error status
+                console.error("Email service error:");
+                console.error("Status:", error.response.status);
+                console.error("Data:", error.response.data);
+            } 
+            else if (error.request) {
+                // Request made but no response
+                console.error("No response from notification service");
+            } 
+            else {
+                // Something else happened
+                console.error("Error:", error.message);
+            }
 
         }
 

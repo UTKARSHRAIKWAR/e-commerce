@@ -42,23 +42,17 @@ app.use("/cart",authenticate, createProxyMiddleware({
 app.use("/order",authenticate, createProxyMiddleware({
     target:"http://localhost:5004",
     changeOrigin:true,
-    timeout:5000,
-    proxyTimeout:5000
     
 }))
 
 app.use("/payment",authenticate, createProxyMiddleware({
     target:"http://localhost:5005",
     changeOrigin:true,
-    timeout:5000,
-    proxyTimeout:5000
 }))
 
 app.use("/shipment",authenticate, createProxyMiddleware({
     target:"http://localhost:5006",
     changeOrigin:true,
-    timeout:5000,
-    proxyTimeout:5000
 }))
 
 app.use("/notification", createProxyMiddleware({
