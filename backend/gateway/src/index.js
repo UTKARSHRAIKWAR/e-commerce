@@ -52,7 +52,20 @@ app.use("/payment",authenticate, createProxyMiddleware({
     changeOrigin:true,
     timeout:5000,
     proxyTimeout:5000
-    
+}))
+
+app.use("/shipment",authenticate, createProxyMiddleware({
+    target:"http://localhost:5006",
+    changeOrigin:true,
+    timeout:5000,
+    proxyTimeout:5000
+}))
+
+app.use("/notification", createProxyMiddleware({
+    target:"http://localhost:5007",
+    changeOrigin:true,
+    timeout:5000,
+    proxyTimeout:5000
 }))
 
 app.get("/health",(req,res)=>{

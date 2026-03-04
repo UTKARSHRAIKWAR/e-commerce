@@ -76,7 +76,8 @@ const login = asyncHandler(async(req,res)=>{
 
 
     const user = await User.findOne({
-        $or:[{email},{phoneNo}]
+        // $or:[{email},{phoneNo}]
+        phoneNo
     })
 
 
@@ -98,7 +99,7 @@ const login = asyncHandler(async(req,res)=>{
             httpOnly:true,
             secure:process.env.NODE_ENV === "production",
             sameSite:"strict",
-            maxAge:15*60*1000
+            maxAge:7*24*60*60*1000
         })
         .cookie("refreshToken", refreshToken, {
             httpOnly:true,
@@ -188,4 +189,16 @@ const refreshToken = asyncHandler(async(req,res) => {
     .json({message:"Token refreshed successfully."})
 })
 
-export {Register, login, logout ,refreshToken}
+const getUserById = asyncHandler(async(req,res)=>{
+    const {id} = req.params;
+
+    const user = await User.findById(id).select("email name");
+
+    if(!user){
+        res.status(403).json({message:"User not found"})
+    }
+
+    res.status(200).json(user);
+})
+
+export {Register, login, logout ,refreshToken ,getUserById}

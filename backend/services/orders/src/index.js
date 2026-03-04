@@ -7,6 +7,8 @@ dotenv.config();
 const app = express();
 connectDB();
 
+app.use(express.json());
+
 app.get("/health", (req,res)=>{
     res.json("Order service running");
 })

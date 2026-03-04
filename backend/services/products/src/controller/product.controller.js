@@ -181,7 +181,6 @@ export const validateStock = asyncHandler(async(req,res)=>{
 
     const product = await Products.findById({_id:productId});
 
-    console.log(product);
     
 
     if(!product || !product.isActive){
@@ -201,8 +200,58 @@ export const validateStock = asyncHandler(async(req,res)=>{
     res.status(200).json({
         message:"Stock available",
         available:true,
+        price:product.price,
         availableStock:product.stockQuantity
     });
 })
 
+export const deductStock = asyncHandler(async (req, res) => {
+    const { items } = req.body;
+
+    if (!items || !Array.isArray(items)) {
+        return res.status(400).json({ message: "Items are required." });
+    }
+
+    for (const item of items) {
+        const updatedProduct = await Products.findOneAndUpdate(
+            {
+                _id: item.productId,
+                stockQuantity: { $gte: item.quantity }
+            },
+            {
+                $inc: { stockQuantity: -item.quantity }
+            },
+            { new: true }
+        );
+
+        if (!updatedProduct) {
+            return res.status(400).json({
+                message: `Insufficient stock for product ${item.productId}`
+            });
+        }
+    }
+    
+
+    res.status(200).json({ message: "Stock deducted successfully" });
+});
+
+
+// export const deductStock = asyncHandler(async(req,res)=>{
+//     const {item} = req.body;
+
+//     const product = await Products.findOneAndUpdate(
+//         {
+//         _id:item.productId,
+//         stockQuantity:{$gte:item.quantity}
+//         },
+//         {$inc:{stockQuantity:-item.quantity}},
+//         {new:true}
+//     );
+
+//     if(!product){
+//         return res.status(404).json({message:"stock error"})
+//     }
+
+//     res.status(200).json({message:"Stock updated"})
+// })
 //TODO => add review controller.

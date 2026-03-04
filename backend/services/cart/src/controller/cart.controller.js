@@ -93,6 +93,7 @@ export const clearCart = async (req, res, next) => {
   try {
     const userId = req.headers["x-user-id"];
 
+
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -107,7 +108,7 @@ export const clearCart = async (req, res, next) => {
       return res.status(404).json({ message: "Cart not found" });
     }
 
-    res.json({ message: "Cart cleared", cart: updatedCart });
+    res.status(200).json({ message: "Cart cleared", cart: updatedCart });
 
   } catch (error) {
     next(error);
