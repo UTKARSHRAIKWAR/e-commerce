@@ -1,6 +1,9 @@
 import asyncHandler from "express-async-handler"
 import axios from "axios"
 import Orders from "../db/order.model.js";
+import {publisher} from "../events/eventBus.js"
+
+
 export const createOrder =  asyncHandler(async(req,res)=>{
     const userId = req.headers["x-user-id"];
 
@@ -58,6 +61,7 @@ export const getMyOrders = asyncHandler(async(req,res)=>{
 
 
 export const confirmPayment = asyncHandler(async(req,res)=>{
+
      const {orderId, paymentId, success , address} = req.body;
 
      const order = await Orders.findById(orderId);
@@ -71,78 +75,100 @@ export const confirmPayment = asyncHandler(async(req,res)=>{
      order.paymentId = paymentId;
 
 
-     if(success){
-        //deduct stock
-        try {
-            await axios.post(
-                `${process.env.PRODUCT_SERVICE_URL}/deduct-stock`,
-                {items:order.items},
-            )
-        } catch (error) {
-            console.error("Failed to deduct stock: ",error.response?.data?.message)
-        }
+    //  if(success){
+    //     //deduct stock
+    //     try {
+    //         await axios.post(
+    //             `${process.env.PRODUCT_SERVICE_URL}/deduct-stock`,
+    //             {items:order.items},
+    //         )
+    //     } catch (error) {
+    //         console.error("Failed to deduct stock: ",error.response?.data?.message)
+    //     }
 
-        //clear cart
-        try {
-            await axios.delete(
-                `${process.env.CART_SERVICE_URL}/clear`,
-                {headers:{"x-user-id":order.userId}}
-            )
-        } catch (error) {
-             console.error("Failed to clear cart: ",error.response?.data?.message)
-        }
+    //     //clear cart
+    //     try {
+    //         await axios.delete(
+    //             `${process.env.CART_SERVICE_URL}/clear`,
+    //             {headers:{"x-user-id":order.userId}}
+    //         )
+    //     } catch (error) {
+    //          console.error("Failed to clear cart: ",error.response?.data?.message)
+    //     }
 
-        //create shipment
-        try {
-            await axios.post(
-                `${process.env.SHIPMENT_SERVICE_URL}/`,{
-                    userId:order.userId,
-                    orderId:orderId,
-                    address:address
-                }
-            );
-        } catch (error) {
-            console.error("Failed to create shipment: ",error.response?.data)
-        }
+    //     //create shipment
+    //     try {
+    //         await axios.post(
+    //             `${process.env.SHIPMENT_SERVICE_URL}/`,{
+    //                 userId:order.userId,
+    //                 orderId:orderId,
+    //                 address:address
+    //             }
+    //         );
+    //     } catch (error) {
+    //         console.error("Failed to create shipment: ",error.response?.data)
+    //     }
 
         
-        try {
-            //getUser
-            const {data:user} = await axios.get(
-                `${process.env.USER_SERVICE_URL}/users/${order.userId}`,
-            )
+    //     try {
+    //         //getUser
+    //         const {data:user} = await axios.get(
+    //             `${process.env.USER_SERVICE_URL}/users/${order.userId}`,
+    //         )
 
-            //send mail
-            await axios.post(
-                `${process.env.NOTIFICATION_SERVICE_URL}/`,{
-                    to:user.email,
-                    subject:"order confirmed",
-                    html:`<h1>Your order ${orderId} is confirmed</h1>`
-                }
-            )
-        } catch (error) {
+    //         //send mail
+    //         await axios.post(
+    //             `${process.env.NOTIFICATION_SERVICE_URL}/`,{
+    //                 to:user.email,
+    //                 subject:"order confirmed",
+    //                 html:`<h1>Your order ${orderId} is confirmed</h1>`
+    //             }
+    //         )
+    //     } catch (error) {
 
-            if (error.response) {
-                // Server responded with error status
-                console.error("Email service error:");
-                console.error("Status:", error.response.status);
-                console.error("Data:", error.response.data);
-            } 
-            else if (error.request) {
-                // Request made but no response
-                console.error("No response from notification service");
-            } 
-            else {
-                // Something else happened
-                console.error("Error:", error.message);
-            }
+    //         if (error.response) {
+    //             // Server responded with error status
+    //             console.error("Email service error:");
+    //             console.error("Status:", error.response.status);
+    //             console.error("Data:", error.response.data);
+    //         } 
+    //         else if (error.request) {
+    //             // Request made but no response
+    //             console.error("No response from notification service");
+    //         } 
+    //         else {
+    //             // Something else happened
+    //             console.error("Error:", error.message);
+    //         }
 
-        }
+    //     }
+
+
+    if (success){
+        //deducts stock
+        //clear cart
+        //create shipment
+        //notify user
+        //getUser
+             const {data:user} = await axios.get(
+                 `${process.env.USER_SERVICE_URL}/users/${order.userId}`,
+             )
+        await publisher.publish(
+            "ORDER_CONFIRMED",
+            JSON.stringify({
+                orderId:order.id,
+                userId:order.userId,
+                items:order.items,
+                email:user.email,
+                address
+            })
+        )
+    }
 
      await order.save();
      
      res.status(200).json({ message: "Payment confirmed"});
-    }
+    
 })
 
 

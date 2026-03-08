@@ -2,6 +2,7 @@ import "dotenv/config"
 import express from "express"
 import connectDB from "./db/init.js"
 import shippingRoutes from "./routes/shipping.routes.js"
+import './events/orderConfirmed.event.js'
 
 
 connectDB();

@@ -35,3 +35,21 @@ export const sendEmail = async(req,res,next)=> {
         next(error);
     }
 }
+
+
+export const sendEmailEvent = async({to, subject, html})=> {
+        await transporter.sendMail({
+            from:process.env.EMAIL_USER,
+            to,
+            subject,
+            html
+        })
+
+        await EmailLog.create({
+            to,
+            subject,
+            body:html,
+            status:"send"
+        });
+        console.log("Notification send:",to)
+}
