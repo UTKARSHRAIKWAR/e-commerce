@@ -2,6 +2,7 @@ import express from "express"
 import dotenv from "dotenv"
 import connectDB from "./db/init.js";
 import productRoutes from "./routes/product.route.js"
+import "./events/orderConfirmed.listener.js";
 
 dotenv.config()
 connectDB();

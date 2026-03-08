@@ -236,22 +236,4 @@ export const deductStock = asyncHandler(async (req, res) => {
 });
 
 
-// export const deductStock = asyncHandler(async(req,res)=>{
-//     const {item} = req.body;
-
-//     const product = await Products.findOneAndUpdate(
-//         {
-//         _id:item.productId,
-//         stockQuantity:{$gte:item.quantity}
-//         },
-//         {$inc:{stockQuantity:-item.quantity}},
-//         {new:true}
-//     );
-
-//     if(!product){
-//         return res.status(404).json({message:"stock error"})
-//     }
-
-//     res.status(200).json({message:"Stock updated"})
-// })
 //TODO => add review controller.

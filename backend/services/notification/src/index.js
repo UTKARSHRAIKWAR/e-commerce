@@ -2,6 +2,7 @@ import "dotenv/config"
 import express from "express"
 import connectDB from "./db/init.js";
 import notificationRoutes from "./routes/notification.route.js"
+import "./events/orderConfirmed.event.js";
 
 const app = express();
 connectDB();
