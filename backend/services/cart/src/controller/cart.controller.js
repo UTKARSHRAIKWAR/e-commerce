@@ -1,5 +1,6 @@
 import axios from "axios"
 import Cart from "../db/cart.model.js";
+import logger from "../utils/logger.js";
 
 export const addToCart = async(req,res,next)=>{
 try {
@@ -12,6 +13,7 @@ try {
     );
 
     if(!data || !data.isActive){
+        logger.warn(`Product ${productId} not found or inactive`);
         return res.status(404).json({message:"Product not found."})
     }
 
@@ -22,6 +24,7 @@ try {
             userId,
             items:[{productId, quantity, price:data.price}]
         })
+        logger.info(`New cart created for user ${userId}`);
     } else {
         const itemIndex = cart.items.findIndex(
             item => item.productId.toString() === productId
@@ -37,12 +40,14 @@ try {
             });
         }
         await cart.save();
+        logger.info(`Cart updated for user ${userId}`);
     }
 
     res.status(200).json({cart});
 
 
 } catch (error) {
+    logger.error(`Add to cart failed: ${error.message}`);
     next(error);
 }
 }
@@ -54,6 +59,7 @@ export const getCart = async(req,res)=>{
     const cart = await Cart.findOne({userId});
 
     if(!cart){
+        logger.warn(`Cart not found for user ${userId}`);
         return res.json({items:[],total:0})
     }
 
@@ -62,6 +68,7 @@ export const getCart = async(req,res)=>{
     0
     );
 
+    logger.debug(`Cart total calculated for user ${userId}: ${total}`);
     res.json({
         items:cart.items,
         total
@@ -71,11 +78,12 @@ export const getCart = async(req,res)=>{
 
 export const removeFromCart = async(req,res)=>{
     const userId = req.headers["x-user-id"];
-    const {productId} = req.body;
+    const {productId} = req.params;
 
     const cart = await Cart.findOne({userId});
 
     if(!cart){
+        logger.warn(`Cart not found while removing item for user ${userId}`);
         res.status(404).json({message:"Cart not found."})
     }
 
@@ -85,6 +93,8 @@ export const removeFromCart = async(req,res)=>{
 
     await cart.save();
 
+    logger.info(`Product ${productId} removed from cart`);
+
     res.json(cart);  
 }
 
@@ -93,9 +103,11 @@ export const clearCart = async (req, res, next) => {
   try {
     const userId = req.headers["x-user-id"];
 
+    logger.info(`Clear cart request for user ${userId}`);
 
     if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+        logger.warn(`Unauthorized cart clear attempt`);
+        return res.status(401).json({ message: "Unauthorized" });
     }
 
     const updatedCart = await Cart.findOneAndUpdate(
@@ -108,9 +120,12 @@ export const clearCart = async (req, res, next) => {
       return res.status(404).json({ message: "Cart not found" });
     }
 
+    logger.info(`Cart cleared for user ${userId}`);
+
     res.status(200).json({ message: "Cart cleared", cart: updatedCart });
 
   } catch (error) {
+    logger.error(`Clear cart error: ${error.message}`);
     next(error);
   }
 };

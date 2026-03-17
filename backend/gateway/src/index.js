@@ -3,17 +3,28 @@ import { createProxyMiddleware } from "http-proxy-middleware"
 import { authenticate } from "./middlewares/auth.middleware.js";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv"
+import logger from "./utils/logger.js";
+import cors from "cors"
 
 dotenv.config();
 
 const app = express()
 
+
 app.use(cookieParser());
 
 // app.use(express.json());
 // app.use(express.urlencoded({ extended: true })); // when we use body parsing in gateway, request never reach to other services
+
+
+const corsOptions = {
+origin: "http://localhost:5173", // Replace with your frontend's origin
+credentials: true,
+};
+app.use(cors(corsOptions));
+
 app.use((req, res, next) => {
-  console.log("GATEWAY HIT:", req.method, req.originalUrl);
+    logger.info(`Gateway hit ${req.method} ${req.originalUrl} ip:${req.ip}`);
   next();
 });
 
@@ -68,5 +79,5 @@ app.get("/health",(req,res)=>{
 
 
 app.listen(5000, ()=> 
-    console.log("API Gateway running on PORT 5000")
+    logger.info("API Gateway running on PORT 5000")
 );

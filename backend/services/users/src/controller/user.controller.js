@@ -77,7 +77,7 @@ const login = asyncHandler(async(req,res)=>{
 
     const user = await User.findOne({
         // $or:[{email},{phoneNo}]
-        phoneNo
+        email
     })
 
 

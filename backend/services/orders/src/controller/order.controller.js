@@ -2,10 +2,13 @@ import asyncHandler from "express-async-handler"
 import axios from "axios"
 import Orders from "../db/order.model.js";
 import {publisher} from "../events/eventBus.js"
+import logger from "../utils/logger.js";
 
 
 export const createOrder =  asyncHandler(async(req,res)=>{
     const userId = req.headers["x-user-id"];
+
+    logger.info(`Create order request from user ${userId}`);
 
     //Get cart
     const {data:cart} = await axios.get(
@@ -46,12 +49,16 @@ export const createOrder =  asyncHandler(async(req,res)=>{
         totalAmount:total
     });
 
+    logger.info(`Order created: ${order._id} for user ${userId}`);
+
     res.status(201).json(order)
 })
 
 
 export const getMyOrders = asyncHandler(async(req,res)=>{
     const userId = req.headers["x-user-id"];
+
+    logger.info(`Fetching orders for user ${userId}`);
 
     const orders = await Orders.find({userId}).sort({createdAt:-1});
 
@@ -63,6 +70,8 @@ export const getMyOrders = asyncHandler(async(req,res)=>{
 export const confirmPayment = asyncHandler(async(req,res)=>{
 
      const {orderId, paymentId, success , address} = req.body;
+
+     logger.info(`Payment confirmation received for order ${orderId}`);
 
      const order = await Orders.findById(orderId);
      
@@ -145,6 +154,7 @@ export const confirmPayment = asyncHandler(async(req,res)=>{
 
 
     if (success){
+        logger.info(`Payment successful for order ${orderId}`);
         //deducts stock
         //clear cart
         //create shipment
@@ -163,6 +173,10 @@ export const confirmPayment = asyncHandler(async(req,res)=>{
                 address
             })
         )
+         logger.info(`ORDER_CONFIRMED event published for order ${orderId}`);
+
+    } else {
+        logger.warn(`Payment failed for order ${orderId}`);
     }
 
      await order.save();
@@ -175,6 +189,8 @@ export const confirmPayment = asyncHandler(async(req,res)=>{
 export const updateOrderStatus = asyncHandler(async(req,res)=>{
     const {orderId, status} = req.body;
 
+    logger.info(`Updating order ${orderId} to status ${status}`);
+
     const order = await Orders.findByIdAndUpdate(
         {_id:orderId},
         {status},
@@ -184,6 +200,8 @@ export const updateOrderStatus = asyncHandler(async(req,res)=>{
     if(!order){
         return res.status(404).json({message:"Order not found"});
     }
+
+    logger.info(`Order ${orderId} status updated to ${status}`);
 
     res.status(200).json({message:"Order status updated"})
 })
