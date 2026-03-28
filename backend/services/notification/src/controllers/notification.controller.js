@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer"
 import EmailLog from "../db/email.model.js";
+import logger from "../utils/logger.js";
 
 const transporter = nodemailer.createTransport(
     {
@@ -23,6 +24,8 @@ export const sendEmail = async(req,res,next)=> {
             html
         })
 
+        logger.info("Email sent successfully", { to });
+
         await EmailLog.create({
             to,
             subject,
@@ -32,24 +35,38 @@ export const sendEmail = async(req,res,next)=> {
 
         res.json({message:"Email send"})
     } catch (error) {
+        logger.error("Email sending failed", {
+            error: error.message,
+            stack: error.stack,
+            to: req.body?.to
+        });
         next(error);
     }
 }
 
 
 export const sendEmailEvent = async({to, subject, html})=> {
-        await transporter.sendMail({
-            from:process.env.EMAIL_USER,
+        try {
+            await transporter.sendMail({
+                from:process.env.EMAIL_USER,
+                to,
+                subject,
+                html
+            })
+    
+            logger.info("Event email sent", { to });
+    
+            await EmailLog.create({
+                to,
+                subject,
+                body:html,
+                status:"send"
+            });
+            
+        } catch (error) {
+            logger.error("Event email failed", {
             to,
-            subject,
-            html
-        })
-
-        await EmailLog.create({
-            to,
-            subject,
-            body:html,
-            status:"send"
+            error: error.message
         });
-        console.log("Notification send:",to)
+    }
 }
