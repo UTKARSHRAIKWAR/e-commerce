@@ -1,10 +1,17 @@
 import axios from "axios";
 import asyncHandler from "express-async-handler"
 import Payment from "../db/payment.model.js"
+import logger from "../utils/logger.js";
 
 export const processPayment = asyncHandler(async(req,res)=>{
     const userId = req.headers["x-user-id"]; 
     const {orderId , amount , address} = req.body;
+
+    logger.info("Payment request received", {
+        orderId,
+        userId,
+        amount
+    });
 
     const success = true;
 
@@ -14,6 +21,12 @@ export const processPayment = asyncHandler(async(req,res)=>{
         amount,
         status: success ? "success" : "false",
         provider:"stripe"
+    });
+
+     logger.info("Payment record created", {
+        paymentId: payment._id,
+        orderId,
+        status: payment.status
     });
 
 
@@ -27,9 +40,18 @@ export const processPayment = asyncHandler(async(req,res)=>{
                 address
             }
         );
+        logger.info("Order service notified successfully", { orderId });
     } catch (error) {
-        console.error("Order confirmation failed:" , error.response?.data)
+        logger.error("Order confirmation failed", {
+            orderId,
+            error: error.message,
+            response: error.response?.data
+        });
     }
+
+    logger.info("Payment API response sent", {
+        paymentId: payment._id
+    });
     
     res.json(payment)
 })
