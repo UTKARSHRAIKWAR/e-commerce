@@ -1,10 +1,12 @@
-import dotenv from "dotenv"
-import express from "express"
+import dotenv from "dotenv";
+dotenv.config();
+
+import express from "express";
 import connectDB from "./db/init.js";
 import paymentRoutes from "./routes/payment.route.js"
+import logger from "./utils/logger.js";
 
 
-dotenv.config();
 const app = express();
 connectDB();
 
@@ -19,5 +21,5 @@ app.use("/",paymentRoutes)
 const PORT = process.env.PORT || 3005;
 
 app.listen(PORT, ()=>{
-    console.log(`Payment services running on Port: ${PORT}`);
+    logger.info(`Payment services running on Port: ${PORT}`);
 })

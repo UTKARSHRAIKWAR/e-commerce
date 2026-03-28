@@ -3,6 +3,7 @@ import express from "express"
 import connectDB from "./db/init.js";
 import cartRoutes from "./routes/cart.routes.js"
 import './events/orderConfirmed.event.js'
+import logger from "./utils/logger.js";
 
 
 dotenv.config();
@@ -21,5 +22,5 @@ app.use("/",cartRoutes);
 const PORT = process.env.PORT || 3004;
 
 app.listen(PORT, ()=>{
-    console.log(`Cart services running on Port: ${PORT}`);
+    logger.info(`Cart services running on Port: ${PORT}`);
 })

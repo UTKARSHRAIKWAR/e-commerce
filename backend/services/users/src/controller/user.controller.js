@@ -2,6 +2,7 @@ import asyncHandler from "express-async-handler"
 import User from "../DB/user.model.js";
 import { generateAccessToken, generateRefreshToken } from "../Auth/generateToken.js";
 import jwt from "jsonwebtoken";
+import logger from "../utils/logger.js";
 const Register = asyncHandler(async(req,res)=>{
 
    let {name, phoneNo, email,password,role} = req.body;
@@ -38,6 +39,12 @@ const Register = asyncHandler(async(req,res)=>{
 
     user.refreshToken = refreshToken;
     await user.save();
+
+    logger.info("User registered", {
+        userId: user._id,
+        phoneNo: user.phoneNo,
+        role: user.role
+    });
 
     res.status(201)
         .cookie("accessToken",accessToken, {
@@ -82,6 +89,10 @@ const login = asyncHandler(async(req,res)=>{
 
 
     if(!user){
+        logger.warn("Failed login attempt", {
+            email,
+            phoneNo
+        });
         res.status(401);
         throw new Error("Invalid credentials");
     }
@@ -94,6 +105,10 @@ const login = asyncHandler(async(req,res)=>{
 
 
     if(await user.matchPassword(password)){
+        logger.info("User login successful", {
+        userId: user._id,
+        email: user.email
+    });
         res.status(200)
         .cookie("accessToken", accessToken, {
             httpOnly:true,
@@ -158,12 +173,16 @@ const refreshToken = asyncHandler(async(req,res) => {
     try {
         decoded = jwt.verify(token, process.env.JWT_RefreshSecret);
     } catch (err) {
+        logger.error("Token verification failed", {
+            error: err.message
+        });
         return res.status(403).json({ message: "Invalid or expired refresh token." });
     }
     
     const user = await User.findById(decoded._id).select("-password");
 
     if(!user || user.refreshToken !== token){
+        logger.warn("Invalid refresh token attempt");
         return res.status(403).json({message:"Invalid or expired refresh token."})
     }
 
@@ -172,6 +191,8 @@ const refreshToken = asyncHandler(async(req,res) => {
 
     user.refreshToken = newRefreshToken;
     await user.save();
+
+    logger.info("Token refreshed", { userId: user._id });
 
     res.status(200)
     .cookie("accessToken",newAccessToken, {
@@ -197,6 +218,8 @@ const getUserById = asyncHandler(async(req,res)=>{
     if(!user){
         res.status(403).json({message:"User not found"})
     }
+
+    logger.info("User data requested", { userId: id });
 
     res.status(200).json(user);
 })

@@ -1,11 +1,12 @@
 import mongoose from "mongoose";
+import logger from "../utils/logger.js";
 
 const connectDB = async() => {
     try {
         mongoose.connect(process.env.MONGO_URL);
-        console.log("Mongo DB connected [Cart services]");
+        logger.info("Mongo DB connected [Cart services]");
     } catch (error) {
-        console.log("Failed to connect DB for [Cart Services] ", error);
+        logger.error("Failed to connect DB for [Cart Services] ", error);
         process.exit(1);
     }
 }

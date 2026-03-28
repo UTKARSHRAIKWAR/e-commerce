@@ -3,9 +3,10 @@ import connectDB from "./DB/db.js";
 import dotenv from "dotenv"
 import cookieParser from "cookie-parser";
 import userRoutes from "./routes/routes.js"
+import logger from "./utils/logger.js";
 
 dotenv.config();
-connectDB();
+connectDB();  
 
 const app = express();
 
@@ -23,5 +24,5 @@ app.use("/users", userRoutes);
 const PORT = 5001;
 
 app.listen(PORT,()=>{
-    console.log(`Server running on ${PORT}`);
+    logger.info(`Server running on ${PORT}`);
 })

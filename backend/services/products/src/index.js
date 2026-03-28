@@ -3,6 +3,7 @@ import dotenv from "dotenv"
 import connectDB from "./db/init.js";
 import productRoutes from "./routes/product.route.js"
 import "./events/orderConfirmed.listener.js";
+import logger from "./utils/logger.js";
 
 dotenv.config()
 connectDB();
@@ -22,5 +23,5 @@ app.use("/", productRoutes);
 const PORT = process.env.PORT || 3002
 
 app.listen(PORT,()=>{
-    console.log(`Product services running on ${PORT}`)
+    logger.info(`Product services running on ${PORT}`)
 })
