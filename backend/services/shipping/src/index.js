@@ -3,6 +3,7 @@ import express from "express"
 import connectDB from "./db/init.js"
 import shippingRoutes from "./routes/shipping.routes.js"
 import './events/orderConfirmed.event.js'
+import logger from "./utils/logger.js"
 
 
 connectDB();
@@ -20,5 +21,5 @@ const PORT = process.env.PORT || 3006;
 
 
 app.listen(PORT,()=>{
-    console.log(`Shipping services running on Port: ${PORT}`);
+    logger.info(`Shipping services running on Port: ${PORT}`);
 })
