@@ -6,6 +6,7 @@ import { productService } from "../services/productService";
 import { cartService } from "../services/cartService";
 import { setCart } from "../store/slices/cartSlice";
 import Loader from "../components/common/Loader";
+import ProductCard from "../components/products/ProductCard";
 import toast from "react-hot-toast";
 
 const ProductDetails = () => {
@@ -13,17 +14,28 @@ const ProductDetails = () => {
   const dispatch = useDispatch();
 
   const [product, setProduct] = useState(null);
+  const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
+  const [zoomStyle, setZoomStyle] = useState({});
+  const [isWishlisted, setIsWishlisted] = useState(false);
 
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
+
         const res = await productService.getProductById(id);
         setProduct(res);
+
+        // fetch related products
+        const rel = await productService.getProducts({
+          category: res.category,
+        });
+
+        setRelated(rel.products || []);
       } catch {
         toast.error("Failed to load product");
       } finally {
@@ -31,15 +43,37 @@ const ProductDetails = () => {
       }
     };
 
-    fetchProduct();
+    fetchData();
   }, [id]);
+
+  // 🧠 Image zoom logic
+  const handleMouseMove = (e) => {
+    const { left, top, width, height } =
+      e.currentTarget.getBoundingClientRect();
+
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+
+    setZoomStyle({
+      transformOrigin: `${x}% ${y}%`,
+      transform: "scale(2)",
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setZoomStyle({});
+  };
 
   const handleAddToCart = async () => {
     try {
-      await cartService.addToCart(product._id, quantity);
+      await cartService.addToCart({
+        productId: product._id,
+        quantity: 1,
+      });
       const cart = await cartService.getCart();
       dispatch(setCart(cart));
-      toast.success("Added to cart!");
+
+      toast.success("Added to cart 🛒");
     } catch {
       toast.error("Failed to add to cart");
     }
@@ -56,7 +90,7 @@ const ProductDetails = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-10">
       <div className="grid lg:grid-cols-2 gap-12">
-        {/* LEFT - IMAGE GALLERY */}
+        {/* LEFT - IMAGE */}
         <div className="flex gap-4">
           {/* Thumbnails */}
           <div className="flex flex-col gap-3">
@@ -65,84 +99,109 @@ const ProductDetails = () => {
                 key={i}
                 src={img}
                 onClick={() => setActiveImage(i)}
-                className={`w-16 h-16 object-cover rounded-lg cursor-pointer border ${
+                className={`w-16 h-16 rounded-lg cursor-pointer border ${
                   activeImage === i ? "border-primary-600" : "border-gray-200"
                 }`}
               />
             ))}
           </div>
 
-          {/* Main Image */}
-          <div className="flex-1 bg-white rounded-2xl p-6 border overflow-hidden group">
+          {/* Main Image with Zoom */}
+          <div
+            className="flex-1 bg-white rounded-2xl p-6 border overflow-hidden"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+          >
             <img
               src={images[activeImage]}
-              alt={product.name}
-              className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+              style={zoomStyle}
+              className="w-full h-full object-contain transition-transform duration-200"
             />
           </div>
         </div>
 
-        {/* RIGHT - PRODUCT INFO */}
-        <div className="flex flex-col">
-          {/* Title */}
+        {/* RIGHT - STICKY BUY BOX */}
+        <div className="sticky top-24 h-fit">
           <h1 className="text-3xl font-bold mb-3">{product.name}</h1>
 
-          {/* Ratings */}
-          <div className="flex items-center gap-2 mb-4">
-            <Star className="text-yellow-400 fill-yellow-400" size={18} />
-            {product.averageRatings || 0}
-            <span className="text-gray-500 text-sm">
-              ({product.ratingCount || 0} reviews)
+          {/* Rating */}
+          <div className="flex items-center gap-1 mb-4">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                size={18}
+                className={
+                  i < Math.round(product.averageRatings || 0)
+                    ? "text-yellow-400 fill-yellow-400"
+                    : "text-gray-300"
+                }
+              />
+            ))}
+            <span className="text-sm text-gray-500 ml-2">
+              ({product.ratingCount || 0})
             </span>
           </div>
 
           {/* Price */}
-          <div className="text-3xl font-extrabold text-gray-900 mb-6">
-            ₹{product.price}
-          </div>
+          <div className="text-3xl font-extrabold mb-4">₹{product.price}</div>
 
           {/* Description */}
           <p className="text-gray-600 mb-6">{product.description}</p>
 
-          {/* Quantity + Actions */}
+          {/* Quantity */}
           <div className="flex items-center gap-4 mb-6">
-            <div className="flex items-center border rounded-lg">
+            <div className="flex border rounded-lg">
               <button
                 onClick={() => quantity > 1 && setQuantity(quantity - 1)}
-                className="px-3 py-2"
+                className="px-3"
               >
-                <Minus size={16} />
+                <Minus />
               </button>
 
-              <span className="px-4 font-semibold">{quantity}</span>
+              <span className="px-4">{quantity}</span>
 
               <button
                 onClick={() => setQuantity(quantity + 1)}
-                className="px-3 py-2"
+                className="px-3"
               >
-                <Plus size={16} />
+                <Plus />
               </button>
             </div>
 
             <button
               onClick={handleAddToCart}
-              className="flex items-center gap-2 bg-primary-600 text-white px-6 py-3 rounded-xl hover:bg-primary-500 transition"
+              className="flex-1 bg-primary-600 text-white px-6 py-3 rounded-xl hover:bg-primary-500 transition"
             >
-              <ShoppingCart size={18} />
               Add to Cart
             </button>
 
-            <button className="p-3 border rounded-xl hover:text-red-500">
-              <Heart size={18} />
+            <button
+              onClick={() => setIsWishlisted(!isWishlisted)}
+              className={`p-3 border rounded-xl ${
+                isWishlisted ? "text-red-500" : ""
+              }`}
+            >
+              <Heart />
             </button>
           </div>
 
-          {/* Highlights */}
-          <div className="space-y-3 text-sm text-gray-600">
-            <p>✔ Free delivery available</p>
-            <p>✔ 7 days replacement</p>
-            <p>✔ Secure checkout</p>
+          {/* Trust badges */}
+          <div className="text-sm text-gray-600 space-y-2">
+            <p>✔ Free delivery</p>
+            <p>✔ Secure payment</p>
+            <p>✔ Easy returns</p>
           </div>
+        </div>
+      </div>
+
+      {/* RELATED PRODUCTS */}
+      <div className="mt-16">
+        <h2 className="text-2xl font-bold mb-6">Related Products</h2>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {related.slice(0, 4).map((item) => (
+            <ProductCard key={item._id} product={item} />
+          ))}
         </div>
       </div>
     </div>
