@@ -10,7 +10,8 @@ try {
     //get product info from product service
     const {data} = await axios.get(
         `${process.env.PRODUCT_SERVICE_URL}/${productId}`
-    );
+    );  
+    
 
     if(!data || !data.isActive){
         logger.warn(`Product ${productId} not found or inactive`);

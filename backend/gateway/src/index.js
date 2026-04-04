@@ -50,7 +50,7 @@ app.use("/cart",authenticate, createProxyMiddleware({
     
 }))
 
-app.use("/order",authenticate, createProxyMiddleware({
+app.use("/orders",authenticate, createProxyMiddleware({
     target:"http://localhost:5004",
     changeOrigin:true,
     

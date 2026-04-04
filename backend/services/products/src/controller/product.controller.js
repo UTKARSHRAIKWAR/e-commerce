@@ -47,7 +47,7 @@ export const addProduct = asyncHandler(async(req,res,next)=> {
 export const getProduct = asyncHandler(async(req,res, next)=> {
         const {
             page=1,
-            limit = 10,
+            limit = 12,
             category,
             minPrice,
             maxPrice,
