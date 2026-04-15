@@ -1,215 +1,268 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight, Star, Shield, Truck, Clock } from 'lucide-react';
-import ProductCard from '../components/products/ProductCard';
-import Loader from '../components/common/Loader';
-import { SkeletonProductCard } from '../components/common/Skeleton';
-import { productService } from '../services/productService';
-import { categoryService } from '../services/categoryService';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight, Star, Shield, Truck, Clock } from "lucide-react";
 
-// Mock data fallback in case API is down
-const MOCK_CATEGORIES = [
-  { id: 1, name: 'Electronics', image: 'https://placehold.co/300x300/e2e8f0/475569?text=Electronics' },
-  { id: 2, name: 'Fashion', image: 'https://placehold.co/300x300/e2e8f0/475569?text=Fashion' },
-  { id: 3, name: 'Home & Kitchen', image: 'https://placehold.co/300x300/e2e8f0/475569?text=Home' },
-  { id: 4, name: 'Sports', image: 'https://placehold.co/300x300/e2e8f0/475569?text=Sports' },
-];
-
-const MOCK_PRODUCTS = [
-  { _id: '1', title: 'Wireless Noise Cancelling Headphones', price: 299.99, discount: 15, category: 'Electronics', image: 'https://placehold.co/400x400/f8fafc/334155?text=Headphones' },
-  { _id: '2', title: 'Minimalist Minimal Watch', price: 199.50, discount: 0, category: 'Fashion', image: 'https://placehold.co/400x400/f8fafc/334155?text=Watch' },
-  { _id: '3', title: 'Smart Home Security Camera', price: 89.99, discount: 20, category: 'Electronics', image: 'https://placehold.co/400x400/f8fafc/334155?text=Camera' },
-  { _id: '4', title: 'Ergonomic Office Chair', price: 249.00, discount: 10, category: 'Home & Kitchen', image: 'https://placehold.co/400x400/f8fafc/334155?text=Chair' },
-];
+import ProductCard from "../components/products/ProductCard";
+import { SkeletonProductCard } from "../components/common/Skeleton";
+import { productService } from "../services/productService";
+import { categoryService } from "../services/categoryService";
 
 const Home = () => {
-  const [products, setProducts] = useState({ featured: [], deals: [] });
+  const [products, setProducts] = useState({
+    featured: [],
+    deals: [],
+  });
+
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const loadHome = async () => {
       try {
         setLoading(true);
-        // Attempt to fetch from API
+
         const [prodRes, catRes] = await Promise.all([
           productService.getProducts({ limit: 8 }),
-          categoryService.getCategories().catch(() => MOCK_CATEGORIES)
+          categoryService.getCategories(),
         ]);
-        
-        const fetchedProducts = prodRes?.products || MOCK_PRODUCTS;
-        
+
+        const allProducts = prodRes?.products || [];
+        const allCategories = catRes || [];
+
         setProducts({
-          featured: fetchedProducts.slice(0, 4),
-          deals: fetchedProducts.filter(p => p.discount > 0).slice(0, 4) || MOCK_PRODUCTS.filter(p => p.discount > 0)
+          featured: allProducts.slice(0, 8),
+          deals: allProducts.filter((item) => item.discount > 0).slice(0, 8),
         });
-        setCategories(catRes || MOCK_CATEGORIES);
+
+        setCategories(allCategories);
       } catch (error) {
-        // Fallback to mock data if API is entirely unavailable
-        console.warn("Using mock data due to API error", error);
-        setProducts({
-          featured: MOCK_PRODUCTS.slice(0, 4),
-          deals: MOCK_PRODUCTS.filter(p => p.discount > 0).slice(0, 4)
-        });
-        setCategories(MOCK_CATEGORIES);
+        console.error("Home load failed", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    loadHome();
   }, []);
 
   return (
-    <div className="space-y-16 lg:space-y-24">
-      
-      {/* Hero Section */}
-      <section className="relative bg-gray-900 text-white overflow-hidden mx-4 sm:mx-6 lg:mx-8 rounded-3xl mt-6">
-        <div className="absolute inset-0 z-0 opacity-40">
-           <img src="https://placehold.co/1920x600/111827/475569?text=Modern+Shopping" alt="Hero background" className="w-full h-full object-cover" />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-900 to-transparent z-0"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-20 lg:py-32 flex flex-col items-start justify-center">
-          <span className="inline-block py-1 px-3 rounded-full bg-primary-500/20 text-primary-400 font-semibold tracking-wider text-sm mb-4 border border-primary-500/30">
-            NEW SPRING COLLECTION
-          </span>
-          <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tight mb-6 max-w-2xl leading-tight">
-            Elevate Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-indigo-400">Lifestyle</span>
-          </h1>
-          <p className="text-lg md:text-xl text-gray-300 max-w-xl mb-10 leading-relaxed">
-            Discover premium products designed to bring comfort, style, and productivity to your everyday life.
-          </p>
-          <Link to="/products" className="inline-flex items-center justify-center px-8 py-4 text-base font-bold rounded-full bg-primary-600 text-white hover:bg-primary-500 hover:shadow-lg hover:shadow-primary-600/30 transition-all duration-300 gap-2 transform hover:-translate-y-1">
-            Shop Now <ArrowRight size={20} />
-          </Link>
-        </div>
-      </section>
+    <div className="space-y-14 md:space-y-20 pb-10">
+      {/* HERO */}
+      <section className="px-3 sm:px-5 lg:px-8 pt-4">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-gray-950 via-gray-900 to-gray-800">
+          {/* background glow */}
+          <div className="absolute -top-20 -right-20 w-72 h-72 bg-primary-500/20 blur-3xl rounded-full" />
+          <div className="absolute bottom-0 left-0 w-72 h-72 bg-indigo-500/10 blur-3xl rounded-full" />
 
-      {/* Features/Trust Banners */}
-      <section className="py-8 bg-white border-y border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="flex flex-col items-center text-center space-y-3 p-4 group">
-              <div className="w-14 h-14 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <Truck size={24} />
-              </div>
-              <div>
-                <h4 className="font-bold text-gray-900">Free Shipping</h4>
-                <p className="text-sm text-gray-500 mt-1">On orders over $99</p>
-              </div>
-            </div>
-            <div className="flex flex-col items-center text-center space-y-3 p-4 group">
-              <div className="w-14 h-14 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <Shield size={24} />
-              </div>
-              <div>
-                <h4 className="font-bold text-gray-900">Secure Payment</h4>
-                <p className="text-sm text-gray-500 mt-1">100% secure checkout</p>
-              </div>
-            </div>
-            <div className="flex flex-col items-center text-center space-y-3 p-4 group">
-              <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <Clock size={24} />
-              </div>
-              <div>
-                <h4 className="font-bold text-gray-900">24/7 Support</h4>
-                <p className="text-sm text-gray-500 mt-1">Dedicated online support</p>
-              </div>
-            </div>
-            <div className="flex flex-col items-center text-center space-y-3 p-4 group">
-              <div className="w-14 h-14 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <Star size={24} />
-              </div>
-              <div>
-                <h4 className="font-bold text-gray-900">Top Reviews</h4>
-                <p className="text-sm text-gray-500 mt-1">From verified buyers</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+          <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 lg:px-14 py-14 sm:py-20 lg:py-28 grid lg:grid-cols-2 gap-10 items-center">
+            {/* Left */}
+            <div>
+              <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs sm:text-sm font-semibold tracking-wider text-primary-300 mb-5">
+                NEW COLLECTION 2026
+              </span>
 
-      {/* Shop by Categories */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-end mb-10">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Top Categories</h2>
-            <p className="text-gray-500 mt-2">Find exactly what you are looking for</p>
-          </div>
-        </div>
-        
-        {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map(i => <div key={i} className="aspect-square bg-gray-200 animate-pulse rounded-2xl"></div>)}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {categories.slice(0, 4).map((category, index) => (
-              <Link 
-                key={category.id || index} 
-                to={`/products?category=${category.name.toLowerCase()}`}
-                className="group relative overflow-hidden rounded-2xl aspect-square shadow-sm"
-              >
-                <img 
-                  src={category.image} 
-                  alt={category.name} 
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+              <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black text-white leading-tight">
+                Shop Smart.
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-indigo-400">
+                  Live Better.
+                </span>
+              </h1>
+
+              <p className="mt-5 text-sm sm:text-base lg:text-lg text-gray-300 max-w-xl leading-relaxed">
+                Discover premium products curated for modern lifestyles. Better
+                quality, faster delivery, smarter shopping.
+              </p>
+
+              <div className="mt-8 flex flex-col sm:flex-row gap-4">
+                <Link
+                  to="/products"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-primary-600 hover:bg-primary-500 px-7 py-3.5 text-white font-bold transition"
+                >
+                  Shop Now <ArrowRight size={18} />
+                </Link>
+
+                <Link
+                  to="/products"
+                  className="inline-flex items-center justify-center rounded-full border border-white/15 px-7 py-3.5 text-white hover:bg-white/10 transition"
+                >
+                  Explore Deals
+                </Link>
+              </div>
+            </div>
+
+            {/* Right */}
+            <div className="hidden lg:flex justify-center">
+              <div className="relative w-full max-w-xl">
+                <img
+                  src="https://placehold.co/700x500/111827/ffffff?text=Premium+Shopping"
+                  alt="shopping"
+                  className="rounded-3xl shadow-2xl border border-white/10"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/20 to-transparent"></div>
-                <h3 className="absolute bottom-6 left-6 text-xl font-bold text-white group-hover:text-primary-400 transition-colors">
-                  {category.name}
-                </h3>
-              </Link>
-            ))}
+              </div>
+            </div>
           </div>
-        )}
+        </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-end mb-10">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Featured Products</h2>
-            <p className="text-gray-500 mt-2">Handpicked for you with love</p>
-          </div>
-          <Link to="/products" className="hidden sm:flex items-center font-medium text-primary-600 hover:text-primary-700 gap-1 hover:underline">
-            View All <ArrowRight size={16} />
-          </Link>
-        </div>
+      {/* TRUST FEATURES */}
+      <section className="px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          {[
+            {
+              icon: Truck,
+              title: "Free Shipping",
+              desc: "Orders over ₹999",
+            },
+            {
+              icon: Shield,
+              title: "Secure Payment",
+              desc: "100% Protected",
+            },
+            {
+              icon: Clock,
+              title: "24/7 Support",
+              desc: "Always Available",
+            },
+            {
+              icon: Star,
+              title: "Top Rated",
+              desc: "Trusted Products",
+            },
+          ].map((item, i) => {
+            const Icon = item.icon;
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            return (
+              <div
+                key={i}
+                className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-sm hover:shadow-md transition"
+              >
+                <div className="w-12 h-12 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center mb-4">
+                  <Icon size={22} />
+                </div>
+
+                <h4 className="font-bold text-gray-900 text-sm sm:text-base">
+                  {item.title}
+                </h4>
+
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                  {item.desc}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* CATEGORIES */}
+      <section className="px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-black text-gray-900">
+                Shop by Category
+              </h2>
+              <p className="text-gray-500 mt-1 text-sm sm:text-base">
+                Find exactly what you need
+              </p>
+            </div>
+          </div>
+
           {loading ? (
-            [...Array(4)].map((_, i) => <SkeletonProductCard key={i} />)
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="aspect-square rounded-2xl bg-gray-200 animate-pulse"
+                />
+              ))}
+            </div>
           ) : (
-            products.featured.map((product) => (
-              <ProductCard key={product._id} product={product} />
-            ))
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+              {categories.slice(0, 4).map((category, i) => (
+                <Link
+                  key={category._id || i}
+                  to={`/products?category=${category.name.toLowerCase()}`}
+                  className="group relative overflow-hidden rounded-2xl aspect-square"
+                >
+                  <img
+                    src={
+                      category.image ||
+                      "https://placehold.co/400x400/f1f5f9/334155?text=Category"
+                    }
+                    alt={category.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
+                  />
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <h3 className="text-white font-bold text-base sm:text-lg">
+                      {category.name}
+                    </h3>
+                  </div>
+                </Link>
+              ))}
+            </div>
           )}
         </div>
       </section>
 
-      {/* Best Deals */}
-      <section className="bg-primary-50/50 py-16 mt-16 border-y border-primary-100/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-end mb-10">
+      {/* FEATURED */}
+      <section className="px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-end mb-8">
             <div>
-               <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Best Deals Today</h2>
-               <p className="text-gray-500 mt-2">Unbeatable prices on premium items. Grab them fast!</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-gray-900">
+                Featured Products
+              </h2>
+              <p className="text-gray-500 mt-1">Handpicked for you</p>
             </div>
+
+            <Link
+              to="/products"
+              className="hidden sm:flex items-center gap-1 text-primary-600 font-semibold hover:underline"
+            >
+              View All <ArrowRight size={16} />
+            </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {loading ? (
-              [...Array(4)].map((_, i) => <SkeletonProductCard key={i} />)
-            ) : (
-              products.deals.map((product) => (
-                <ProductCard key={product._id} product={product} />
-              ))
-            )}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {loading
+              ? [...Array(4)].map((_, i) => <SkeletonProductCard key={i} />)
+              : products.featured.map((item) => (
+                  <ProductCard key={item._id} product={item} />
+                ))}
           </div>
         </div>
       </section>
-      
+
+      {/* DEALS */}
+      <section className="px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto rounded-3xl bg-gradient-to-r from-primary-50 to-indigo-50 p-5 sm:p-8 lg:p-10 border border-primary-100">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-black text-gray-900">
+                Best Deals Today
+              </h2>
+              <p className="text-gray-600 mt-1">
+                Limited time offers on top products
+              </p>
+            </div>
+
+            <Link to="/products" className="text-primary-600 font-semibold">
+              Explore All →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {loading
+              ? [...Array(4)].map((_, i) => <SkeletonProductCard key={i} />)
+              : products.deals.map((item) => (
+                  <ProductCard key={item._id} product={item} />
+                ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 };
