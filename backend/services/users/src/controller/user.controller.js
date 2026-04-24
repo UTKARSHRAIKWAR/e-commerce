@@ -224,4 +224,18 @@ const getUserById = asyncHandler(async(req,res)=>{
     res.status(200).json(user);
 })
 
-export {Register, login, logout ,refreshToken ,getUserById}
+const getLoggedInUser = asyncHandler(async(req,res)=>{
+    const {id} = req.headers["x-user-id"];;
+
+    const user = await User.findById(id).select("email name");
+
+    if(!user){
+        res.status(403).json({message:"User not found"})
+    }
+
+    logger.info("User data requested", { userId: id });
+
+    res.status(200).json(user);
+})
+
+export {Register, login, logout ,refreshToken ,getUserById, getLoggedInUser}

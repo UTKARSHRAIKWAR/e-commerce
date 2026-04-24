@@ -5,8 +5,8 @@ export const orderService = {
     const response = await api.post('/orders', orderData);
     return response.data;
   },
-  getUserOrders: async (userId) => {
-    const response = await api.get(`/orders/user/${userId}`);
+  getUserOrders: async () => {
+    const response = await api.get(`/orders/my`);
     return response.data;
   },
   getOrderById: async (orderId) => {
