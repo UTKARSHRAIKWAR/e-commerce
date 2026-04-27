@@ -25,7 +25,7 @@ export const authService = {
   // Get logged-in user profile
   getProfile: async () => {
     try {
-      const { data } = await api.get("/auth/users/profile");
+      const { data } = await api.get("/auth/protected/users/profile/my");
       return data;
     } catch (error) {
       throw error.response?.data || error;
@@ -45,7 +45,7 @@ export const authService = {
   // Logout user
   logout: async () => {
     try {
-      const { data } = await api.post("/auth/users/logout");
+      const { data } = await api.post("/auth/protected/users/logout");
       return data;
     } catch (error) {
       throw error.response?.data || error;

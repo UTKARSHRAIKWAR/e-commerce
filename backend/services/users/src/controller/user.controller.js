@@ -216,12 +216,12 @@ const getUserById = asyncHandler(async(req,res)=>{
     const user = await User.findById(id).select("email name");
 
     if(!user){
-        res.status(403).json({message:"User not found"})
+        return res.status(403).json({message:"User not found"})
     }
 
     logger.info("User data requested", { userId: id });
 
-    res.status(200).json(user);
+    return res.status(200).json(user);
 })
 
 const getLoggedInUser = asyncHandler(async(req,res)=>{
@@ -232,12 +232,12 @@ const getLoggedInUser = asyncHandler(async(req,res)=>{
     const user = await User.findById(id).select("email name");
 
     if(!user){
-        res.status(403).json({message:"User not found"})
+        return res.status(403).json({message:"User not found"})
     }
 
     logger.info("User data requested", { userId: id });
 
-    res.status(200).json(user);
+    return res.status(200).json(user);
 })
 
 export {Register, login, logout ,refreshToken ,getUserById, getLoggedInUser}

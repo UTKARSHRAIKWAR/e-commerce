@@ -28,6 +28,14 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use("/auth/protected",authenticate, createProxyMiddleware({
+    target:"http://localhost:5001",
+    changeOrigin:true,  
+    timeout: 5000,
+    proxyTimeout: 5000,
+}));
+
+
 app.use("/auth", createProxyMiddleware({
     target:"http://localhost:5001",
     changeOrigin:true,  

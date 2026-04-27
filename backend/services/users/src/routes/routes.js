@@ -5,9 +5,9 @@ const router = Router();
 
 router.post("/register",Register);
 router.post("/login",login);
-router.post("/logout", logout)
-router.post("/refresh",refreshToken);
-router.get("/profile",getLoggedInUser);
+router.post("/logout", logout)  //protected
+router.post("/refresh",refreshToken); //protected
+router.get("/profile/my",getLoggedInUser); //protected
 
 router.get("/:id",getUserById);
 
