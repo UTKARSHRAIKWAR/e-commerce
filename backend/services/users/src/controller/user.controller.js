@@ -225,7 +225,9 @@ const getUserById = asyncHandler(async(req,res)=>{
 })
 
 const getLoggedInUser = asyncHandler(async(req,res)=>{
-    const {id} = req.headers["x-user-id"];;
+    const id = req.headers["x-user-id"];
+
+    console.log(id)
 
     const user = await User.findById(id).select("email name");
 
