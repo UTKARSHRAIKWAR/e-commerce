@@ -2,6 +2,7 @@ import express from "express"
 import dotenv from "dotenv"
 import connectDB from "./db/init.js";
 import productRoutes from "./routes/product.route.js"
+import categoryRoutes from "./routes/category.routes.js"
 import "./events/orderConfirmed.listener.js";
 import logger from "./utils/logger.js";
 
@@ -18,6 +19,7 @@ app.get("/health", (req,res)=>{
     res.json("product working");
 })
 
+app.use("/categories", categoryRoutes);
 app.use("/", productRoutes);
 
 const PORT = process.env.PORT || 3002
