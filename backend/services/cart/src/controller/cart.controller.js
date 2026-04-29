@@ -130,3 +130,44 @@ export const clearCart = async (req, res, next) => {
     next(error);
   }
 };
+
+export const updateCart = async (req, res, next) => {
+  try {
+    const userId = req.headers["x-user-id"];
+    const { productId, quantity } = req.body;
+
+    const cart = await Cart.findOne({ userId });
+
+    if (!cart) {
+      return res.status(404).json({
+        message: "Cart not found",
+      });
+    }
+
+    const itemIndex = cart.items.findIndex(
+      (item) => item.productId.toString() === productId
+    );
+
+    if (itemIndex === -1) {
+      return res.status(404).json({
+        message: "Product not found in cart",
+      });
+    }
+
+    cart.items[itemIndex].quantity = quantity;
+
+    await cart.save();
+
+    const total = cart.items.reduce(
+      (acc, item) => acc + item.price * item.quantity,
+      0
+    );
+
+    res.status(200).json({
+      items: cart.items,
+      total,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
